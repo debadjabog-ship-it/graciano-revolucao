@@ -1,0 +1,228 @@
+<!DOCTYPE html><html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revolução Escolar - Graciano André</title>
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #001831, #003566);
+            font-family: Arial, Helvetica, sans-serif;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }h1 {
+        font-size: 32px;
+        color: #4da3ff;
+        text-shadow: 0 0 15px #4da3ff;
+    }
+
+    .card {
+        background: rgba(255,255,255,0.05);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.4);
+        backdrop-filter: blur(8px);
+        margin-bottom: 20px;
+    }
+
+    input, select, textarea, button {
+        width: 95%;
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 10px;
+        background: rgba(0,0,0,0.45);
+        border: 2px solid #4da3ff;
+        color: #fff;
+        font-size: 16px;
+    }
+
+    button {
+        background: #4da3ff;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    button:hover { background: #1d7fe6; }
+    #whatsapp { background: #25D366; }
+    #whatsapp:hover { background: #1eb758; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    th, td {
+        border: 1px solid #4da3ff;
+        padding: 8px;
+        text-align: left;
+    }
+    th { background: #003e7d; }
+
+    .mediaAlta { color: #2ecc71; font-weight: bold; }
+    .mediaBaixa { color: #ff4444; font-weight: bold; }
+    .linhaTop { background: rgba(46, 204, 113, 0.25); }
+    .linhaFraca { background: rgba(255, 68, 68, 0.25); }
+
+    #stats {
+        padding: 12px;
+        background: rgba(0,0,0,0.35);
+        border: 2px solid #4da3ff;
+        border-radius: 10px;
+        margin-top: 10px;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.7s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+</head>
+<body><h1>📚 Revolução Escolar 2.0 - By Graciano André 🚀</h1>
+<p>Sistema super avançado de registro, análises e envio automático da pauta!</p>
+
+<div class="card fade-in">
+    <input id="nome" placeholder="Nome completo" />
+    <input id="classe" placeholder="Classe (ex: 10º B)" />
+    <input id="disciplina" placeholder="Disciplina" />
+    <input id="nota" type="number" placeholder="Nota (0-20)" min="0" max="20" />
+    <select id="presenca">
+        <option>Presente</option>
+        <option>Ausente</option>
+    </select>
+    <textarea id="obs" placeholder="Observações importantes" rows="2"></textarea>
+    <button onclick="registraColega()">✔ Registrar / Editar</button>
+</div>
+
+<input class="fade-in" id="busca" placeholder="🔍 Buscar colega ou classe..." oninput="buscaColegas()" />
+
+<div id="stats" class="fade-in"></div>
+
+<div class="card fade-in">
+    <h2>📄 Pauta Oficial da Turma</h2>
+    <button onclick="analisaTudo()">📊 Análise Completa</button>
+    <button id="whatsapp" onclick="mandaWhatsApp()">📤 Enviar para WhatsApp</button>
+    <button onclick="limpaTudo()">🧨 Limpar Tudo</button>
+
+    <table id="tabela">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Classe</th>
+                <th>Disciplina</th>
+                <th>Nota</th>
+                <th>Presença</th>
+                <th>Faltas</th>
+                <th>Média</th>
+                <th>Observações</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+let colegas = JSON.parse(localStorage.getItem('colegasRevo2')) || [];
+
+function registraColega() {
+    let nome = nome.value.trim();
+    let classe = classe.value.trim();
+    let disciplina = disciplina.value.trim();
+    let nota = parseFloat(nota.value) || 0;
+    let presenca = presenca.value;
+    let obs = obs.value.trim();
+
+    if (!nome || !classe || !disciplina) return alert("Preencha tudo!");
+
+    let antigo = colegas.find(c => c.nome === nome && c.classe === classe && c.disciplina === disciplina);
+    let faltas = (antigo ? antigo.faltas : 0) + (presenca === 'Ausente' ? 1 : 0);
+
+    let obj = { nome, classe, disciplina, nota, presenca, faltas, obs, data: new Date().toLocaleDateString() };
+
+    let index = colegas.findIndex(c => c.nome === nome && c.classe === classe && c.disciplina === disciplina);
+    if (index >= 0) colegas[index] = obj;
+    else colegas.push(obj);
+
+    localStorage.setItem('colegasRevo2', JSON.stringify(colegas));
+    atualizaLista();
+    alert("Colega salvo!");
+
+    nome.value = classe.value = disciplina.value = nota.value = obs.value = '';
+}
+
+function atualizaLista(lista = colegas) {
+    lista.sort((a,b)=>b.nota-a.nota);
+    let tbody = document.querySelector('#tabela tbody');
+    tbody.innerHTML = '';
+
+    lista.forEach((c,i)=>{
+        let linha = tbody.insertRow();
+        linha.innerHTML = `
+            <td>${c.nome}</td>
+            <td>${c.classe}</td>
+            <td>${c.disciplina}</td>
+            <td>${c.nota}</td>
+            <td>${c.presenca}</td>
+            <td>${c.faltas}</td>
+            <td>${(c.nota/20*100).toFixed(1)}%</td>
+            <td>${c.obs || ''}</td>
+            <td><button style="background:#ff4444" onclick="deleta(${i})">X</button></td>`;
+
+        if (c.nota/20 < 0.5) linha.classList.add('linhaFraca');
+        if (c.nota/20 >= 0.85) linha.classList.add('linhaTop');
+    });
+
+    let total = lista.length;
+    let media = lista.reduce((s,c)=>s+c.nota,0)/total || 0;
+    let aus = lista.filter(c => c.presenca==='Ausente').length;
+
+    stats.innerHTML = `Colegas: <b>${total}</b> | Média geral: <b>${media.toFixed(1)}/20</b> | Ausentes: <b>${aus}</b>`;
+}
+
+function buscaColegas(){
+    let termo = busca.value.toLowerCase();
+    let filtrado = colegas.filter(c => c.nome.toLowerCase().includes(termo) || c.classe.toLowerCase().includes(termo));
+    atualizaLista(filtrado);
+}
+
+function analisaTudo(){
+    let media = colegas.reduce((s,c)=>s+c.nota,0)/colegas.length || 0;
+    let faltosos = colegas.filter(c=>c.faltas>3).map(c=>c.nome).join(', ');
+
+    alert(`📊 Análise completa:\nMédia da turma: ${media.toFixed(1)}/20\nFaltosos graves: ${faltosos||'Nenhum'}`);
+}
+
+function mandaWhatsApp(){
+    let txt = '📘 PAUTA COMPLETA - ' + new Date().toLocaleDateString() + '\n\n';
+    colegas.forEach(c=>{
+        txt += `${c.nome} - ${c.classe} - ${c.disciplina}: Nota ${c.nota} (${(c.nota/20*100).toFixed(1)}%) | Presença: ${c.presenca} | Faltas: ${c.faltas}\n`;
+    });
+    window.open(`whatsapp://send?text=${encodeURIComponent(txt)}`);
+}
+
+function deleta(i){
+    if(confirm('Remover colega?')){
+        colegas.splice(i,1);
+        localStorage.setItem('colegasRevo2', JSON.stringify(colegas));
+        atualizaLista();
+    }
+}
+
+function limpaTudo(){
+    if(confirm('Apagar tudo?')){
+        colegas=[];
+        localStorage.removeItem('colegasRevo2');
+        atualizaLista();
+    }
+}
+
+atualizaLista();
+</script></body>
+</html>
